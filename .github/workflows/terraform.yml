@@ -1,63 +1,140 @@
-name: Terraform GCP Pipeline
+name: Terraform Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - dev
   pull_request:
     branches:
       - main
-      
+      - staging
+      - prod
+  push:
+    branches:
+      - dev
+
+env:
+  TF_VERSION: 1.7.5
+
 jobs:
-  terraform:
+  terraform-plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        module: [network, compute, database]
     steps:
-  - name: Checkout do código
-    uses: actions/checkout@v3
-
-  - name: Configurar Terraform
-    uses: hashicorp/setup-terraform@v2
-    with:
-      terraform_version: 1.7.5
-
-  - name: Terraform Init
-    run: terraform init
-
-  - name: Terraform Plan
-    run: terraform plan
-
-  - name: Terraform Apply
-    if: github.ref == 'refs/heads/dev'
-    run: terraform apply -auto-approve
-
-  - name: Terraform Apply
-    if: github.ref == 'refs/heads/dev'
-    run: terraform apply -auto-approve
-      - name: Checkout repo
+      - name: Checkout código
         uses: actions/checkout@v3
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Configure Google Cloud Credentials
-        run: echo "${{ secrets.GCP_CREDENTIALS }}" > gcp-key.json
+      - name: Set Environment Secrets
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            echo "${{ secrets.GCP_DEV_CREDENTIALS }}" > gcp.json
+            export GOOGLE_CREDENTIALS=$(cat gcp.json)
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "${{ secrets.GCP_STAGING_CREDENTIALS }}" > gcp.json
+            export GOOGLE_CREDENTIALS=$(cat gcp.json)
+          fi
 
       - name: Terraform Init
-        run: terraform -chdir=terraform init
+        working-directory: modules/${{ matrix.module }}
+        run: terraform init
 
       - name: Terraform Plan
-        run: terraform -chdir=terraform plan \
-          -var="credentials_file=gcp-key.json" \
-          -var="project_id=ambiente_teste" \
-          -var="project_name=ambiente_teste" \
-          -var="billing_account=XXXXXX-XXXXXX-XXXXXX"
+        working-directory: modules/${{ matrix.module }}
+        run: terraform plan
+
+  dev-apply:
+    name: Apply Dev
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    strategy:
+      matrix:
+        module: [network, compute, database]
+    if: github.ref == 'refs/heads/dev'
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Set GCP Dev Secret
+        run: |
+          echo "${{ secrets.GCP_DEV_CREDENTIALS }}" > gcp.json
+          export GOOGLE_CREDENTIALS=$(cat gcp.json)
+
+      - name: Terraform Init
+        working-directory: modules/${{ matrix.module }}
+        run: terraform init
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        run: terraform -chdir=terraform apply -auto-approve \
-          -var="credentials_file=gcp-key.json" \
-          -var="project_id=ambiente_teste" \
-          -var="project_name=ambiente_teste" \
-          -var="billing_account=XXXXXX-XXXXXX-XXXXXX"
+        working-directory: modules/${{ matrix.module }}
+        run: terraform apply -auto-approve
+
+  staging-apply:
+    name: Apply Staging
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    environment: staging
+    strategy:
+      matrix:
+        module: [network, compute, database]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Set GCP Staging Secret
+        run: |
+          echo "${{ secrets.GCP_STAGING_CREDENTIALS }}" > gcp.json
+          export GOOGLE_CREDENTIALS=$(cat gcp.json)
+
+      - name: Terraform Init
+        working-directory: modules/${{ matrix.module }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: modules/${{ matrix.module }}
+        run: terraform apply -auto-approve
+
+  prod-apply:
+    name: Apply Prod
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    environment: production
+    strategy:
+      matrix:
+        module: [network, compute, database]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Set GCP Prod Secret
+        run: |
+          echo "${{ secrets.GCP_PROD_CREDENTIALS }}" > gcp.json
+          export GOOGLE_CREDENTIALS=$(cat gcp.json)
+
+      - name: Terraform Init
+        working-directory: modules/${{ matrix.module }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: modules/${{ matrix.module }}
+        run: terraform apply -auto-approve
