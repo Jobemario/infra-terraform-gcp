@@ -10,5 +10,5 @@ jobs:
   Test:
     uses: infra-terraform-gcp/.github/workflows/test_terragrunt.yml@main
     with:
-      runs-on: github-linux-runner
+      runs-on: ubuntu-latest
     secrets: inherit
