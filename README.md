@@ -2,54 +2,60 @@
 
 Infraestrutura GCP gerenciado com Terraform
 
-#Introduction
-
+## Introduction
 This project contains Google Cloud Platform infrastructure defined through Terragrunt.
 
-#Prerequisites
+## Prerequisites
+Make sure you have the following prerequisites installed:
+- Google SDK and Google Authentication
+- Management Terraform with Terragrunt
 
-. Google SDK and Google Authentication
-. Management Terraform with Terragrunt
-
-#How to Authenticate Google Cloud:
-
+## How to Authenticate Google Cloud:
 After the Google SDK is installed, keep authenticating with Google Cloud to use your resources using the gcloud command:
-
+```
 gcloud auth application-default login
+```
+## Installing Terraform:
+[Terraform Install](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
-#Installing Terraform:
-Terraform Install
+## Installing Terragrunt:
+[Terragrunt Install](https://terragrunt.gruntwork.io/docs/getting-started/install/)
 
-#Installing Terragrunt:
-Terragrunt Install
+## How to use :
 
-#How to use :
-Clone this repository on your local machine Change the directory to the project folder:
-
+Clone this repository on your local machine
+Change the directory to the project folder:
+```
 cd <your-local-folder>
+```
 Make the necessary changes to the configuration files to suit your needs. (No needed terragrunt init command to init terragrunt)
 
 To format the terragrunt hcl correctly:
-
+```
 terragrunt hclfmt
+```
 To format the terraform code correctly:
-
+```
 terragrunt fmt
+```
 To verify the syntax:
-
+```
 terragrunt validate
+```
 View planned changes if you have gcp permissions:
-
+```
 terragrunt plan
-Remembering that the pipeline flow to apply terragrunt is done only via github actions, don't apply terragrunt locally.
+```
+**Remembering that the pipeline flow to apply terragrunt is done only via github actions, don't apply terragrunt  locally.**
 
-#References:
-Google Cloud SDK
+## References:
+[Google Cloud SDK](https://cloud.google.com/sdk/docs/install?hl=pt-br)
 
-Google Cloud Authenticate
+[Google Cloud Authenticate](https://cloud.google.com/sdk/docs/authorizing?hl=pt-br)
 
-Terraform Google Provider
+[Terraform Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
 
-Terragrunt Start
+[Terragrunt Start](https://terragrunt.gruntwork.io/docs/getting-started/quick-start/)
 
-Terragrunt Documents
+[Terragrunt Documents](https://terragrunt.gruntwork.io/docs/)
+
