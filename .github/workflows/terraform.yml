@@ -1,68 +1,39 @@
-name: Terraform GCP Pipeline (Ultra Profissional)
+name: Terraform GCP Pipeline
 
-# Gatilhos do workflow
 on:
-  pull_request:
-    branches: [main]           # PRs para main executam apenas plan
   push:
-    branches: [main]           # Push para main executa apply (dev automático, staging/prod manual)
+    branches:
+      - main
+  pull_request:
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment: [dev, staging, prod]  # Ambientes paralelos
-    name: Terraform (${{ matrix.environment }})
 
     steps:
-      # 1️⃣ Checkout do código
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.0
 
-      # 3️⃣ Configurar credenciais GCP
-      - name: Configure GCP Credentials
+      - name: Configure Google Cloud Credentials
         run: echo "${{ secrets.GCP_CREDENTIALS }}" > gcp-key.json
 
-      # 4️⃣ Inicializar Terraform com backend GCS
-      - name: Terraform Init (GCS backend)
-        run: terraform -chdir=terraform init \
-          -backend-config="bucket=${{ secrets.TFSTATE_BUCKET }}" \
-          -backend-config="prefix=terraform/state" \
-          -backend-config="credentials=gcp-key.json"
+      - name: Terraform Init
+        run: terraform -chdir=terraform init
 
-      # 5️⃣ Selecionar ou criar workspace correspondente ao ambiente
-      - name: Select Terraform Workspace
-        run: |
-          terraform -chdir=terraform workspace new ${{ matrix.environment }} || \
-          terraform -chdir=terraform workspace select ${{ matrix.environment }}
-
-      # 6️⃣ Executar Terraform Plan (sempre)
       - name: Terraform Plan
         run: terraform -chdir=terraform plan \
           -var="credentials_file=gcp-key.json" \
-          -var="bootstrap_project=${{ secrets.BOOTSTRAP_PROJECT_ID }}" \
-          -var-file="envs/${{ matrix.environment }}.tfvars"
+          -var="project_id=meu-projeto-demo-123" \
+          -var="project_name=Projeto Demo" \
+          -var="billing_account=XXXXXX-XXXXXX-XXXXXX"
 
-      # 7️⃣ Terraform Apply automático para dev
-      - name: Terraform Apply Dev
-        if: github.ref == 'refs/heads/main' && matrix.environment == 'dev'
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
         run: terraform -chdir=terraform apply -auto-approve \
           -var="credentials_file=gcp-key.json" \
-          -var="bootstrap_project=${{ secrets.BOOTSTRAP_PROJECT_ID }}" \
-          -var-file="envs/dev.tfvars"
-
-      # 8️⃣ Terraform Apply manual para staging e prod usando Environments protegidos
-      - name: Terraform Apply Staging/Prod
-        if: github.ref == 'refs/heads/main' && (matrix.environment == 'staging' || matrix.environment == 'prod')
-        environment: ${{ matrix.environment }}  # Ambiente protegido do GitHub (staging/prod)
-        run: terraform -chdir=terraform apply -auto-approve \
-          -var="credentials_file=gcp-key.json" \
-          -var="bootstrap_project=${{ secrets.BOOTSTRAP_PROJECT_ID }}" \
-          -var-file="envs/${{ matrix.environment }}.tfvars"
+          -var="project_id=meu-projeto-demo-123" \
+          -var="project_name=Projeto Demo" \
+          -var="billing_account=XXXXXX-XXXXXX-XXXXXX"
