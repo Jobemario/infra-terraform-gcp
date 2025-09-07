@@ -1,0 +1,14 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Test:
+    uses: infra-terraform-gcp/.github/workflows/test_terragrunt.yml@main
+    with:
+      runs-on: github-linux-runner
+    secrets: inherit
