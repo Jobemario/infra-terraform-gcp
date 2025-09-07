@@ -1,0 +1,1 @@
+/home/jober_project/ops-infra/infra-terraform-gcp/terraform/environments/terragrunt.hcl
