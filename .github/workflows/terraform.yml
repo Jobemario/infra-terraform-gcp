@@ -26,14 +26,14 @@ jobs:
       - name: Terraform Plan
         run: terraform -chdir=terraform plan \
           -var="credentials_file=gcp-key.json" \
-          -var="project_id=meu-projeto-demo-123" \
-          -var="project_name=Projeto Demo" \
+          -var="project_id=ambiente_teste" \
+          -var="project_name=ambiente_teste" \
           -var="billing_account=XXXXXX-XXXXXX-XXXXXX"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: terraform -chdir=terraform apply -auto-approve \
           -var="credentials_file=gcp-key.json" \
-          -var="project_id=meu-projeto-demo-123" \
-          -var="project_name=Projeto Demo" \
+          -var="project_id=ambiente_teste" \
+          -var="project_name=ambiente_teste" \
           -var="billing_account=XXXXXX-XXXXXX-XXXXXX"
