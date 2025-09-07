@@ -1,0 +1,4 @@
+// filepath: /home/jober_project/ops-infra/infra-terraform-gcp/terraform/environments/terragrunt.hcl
+include {
+  path = find_in_parent_folders()
+}
